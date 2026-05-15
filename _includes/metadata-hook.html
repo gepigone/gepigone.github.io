@@ -1,5 +1,9 @@
 <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
 
+{% if page.layout == 'home' %}
+<style>#post-list, nav.pagination { display: none !important; }</style>
+{% endif %}
+
 <style>
   html[data-mode=dark],
   html:not([data-mode]) {
