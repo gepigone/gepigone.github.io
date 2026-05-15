@@ -1,0 +1,62 @@
+<!-- Recently Updated: two versions rendered, JS picks based on auth -->
+
+{% assign MAX_SIZE = 5 %}
+{% assign private_cat_names = site.data.categories | where: "type", "private" | map: "name" %}
+
+{% comment %}--- All posts list ---{% endcomment %}
+{% assign all_list = '' | split: '' %}
+{% for post in site.posts %}
+  {% assign datetime = post.last_modified_at | default: post.date %}
+  {% capture elem %}{{- datetime | date: "%Y%m%d%H%M%S" -}}::{{- forloop.index0 -}}{% endcapture %}
+  {% assign all_list = all_list | push: elem %}
+{% endfor %}
+{% assign all_list = all_list | sort | reverse %}
+{% assign update_list = '' | split: '' %}
+{% for entry in all_list limit: MAX_SIZE %}
+  {% assign update_list = update_list | push: entry %}
+{% endfor %}
+
+{% comment %}--- Public posts only list ---{% endcomment %}
+{% assign pub_list = '' | split: '' %}
+{% for post in site.posts %}
+  {% assign post_is_private = false %}
+  {% for cat in post.categories %}
+    {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
+  {% endfor %}
+  {% unless post_is_private %}
+    {% assign datetime = post.last_modified_at | default: post.date %}
+    {% capture elem %}{{- datetime | date: "%Y%m%d%H%M%S" -}}::{{- forloop.index0 -}}{% endcapture %}
+    {% assign pub_list = pub_list | push: elem %}
+  {% endunless %}
+{% endfor %}
+{% assign pub_list = pub_list | sort | reverse %}
+{% assign public_update_list = '' | split: '' %}
+{% for entry in pub_list limit: MAX_SIZE %}
+  {% assign public_update_list = public_update_list | push: entry %}
+{% endfor %}
+
+{% if update_list.size > 0 or public_update_list.size > 0 %}
+<section id="access-lastmod">
+  <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.lastmod -}}</h2>
+
+  <ul id="lastmod-all" class="content list-unstyled ps-0 pb-1 ms-1 mt-2" style="display:none">
+    {% for item in update_list %}
+      {% assign index = item | split: '::' | last | plus: 0 %}
+      {% assign post = site.posts[index] %}
+      <li class="text-truncate lh-lg">
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <ul id="lastmod-public" class="content list-unstyled ps-0 pb-1 ms-1 mt-2">
+    {% for item in public_update_list %}
+      {% assign index = item | split: '::' | last | plus: 0 %}
+      {% assign post = site.posts[index] %}
+      <li class="text-truncate lh-lg">
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
