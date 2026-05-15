@@ -194,13 +194,12 @@
   var HASH = '64027afcd0ea1d32adfaa4539a8c05c2a535da30753a4d1903d087c27536b23b';
   var AUTH_KEY = 'diary_auth';
   var AUTH_TIME_KEY = 'diary_auth_time';
-  var EXPIRES_MS = 24 * 60 * 60 * 1000; // 24시간
+  var EXPIRES_MS = 24 * 60 * 60 * 1000;
 
   var stored = localStorage.getItem(AUTH_KEY);
   var storedTime = localStorage.getItem(AUTH_TIME_KEY);
   if (stored === HASH && storedTime && Date.now() - Number(storedTime) < EXPIRES_MS) return;
 
-  // 만료됐으면 초기화
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(AUTH_TIME_KEY);
 
@@ -260,18 +259,15 @@
   var isAuthed = stored === HASH && storedTime && Date.now() - Number(storedTime) < EXPIRES_MS;
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Trending Tags: toggle between full list and public-only list
-    var all    = document.getElementById('trending-all');
-    var pub    = document.getElementById('trending-public');
+    var all = document.getElementById('trending-all');
+    var pub = document.getElementById('trending-public');
     if (all && pub) {
       if (isAuthed) {
         all.style.removeProperty('display');
         pub.style.display = 'none';
       }
-      // unauthenticated: trending-public already visible by default
     }
 
-    // Tags page: hide private-only tags
     if (!isAuthed) {
       var privateTags = window.__PRIVATE_TAGS__ || [];
       document.querySelectorAll('#tags a.tag[data-tag]').forEach(function (a) {
