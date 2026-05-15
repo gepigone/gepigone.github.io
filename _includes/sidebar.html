@@ -52,9 +52,14 @@
               {% for category in sorted_categories %}
                 <li class="nav-item">
                   {% assign cat_slug = category | slugify %}
+                  {% assign cat_data = site.data.categories | where: "name", category | first %}
                   <a href="{{ '/categories/' | append: cat_slug | relative_url }}"
                      class="nav-link sidebar-sub-link{% if page.categories contains category %} active{% endif %}">
-                    <i class="fa-fw fas fa-folder"></i>
+                    {% if cat_data.type == 'private' %}
+                      <i class="fa-fw fas fa-lock"></i>
+                    {% else %}
+                      <i class="fa-fw fas fa-folder"></i>
+                    {% endif %}
                     <span>{{ category }}</span>
                     <span class="sidebar-sub-count">{{ site.categories[category].size }}</span>
                   </a>

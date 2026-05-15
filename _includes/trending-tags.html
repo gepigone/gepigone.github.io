@@ -1,0 +1,88 @@
+<!-- The trending tags list -->
+
+{% assign MAX = 10 %}
+{% assign private_cat_names = site.data.categories | where: "type", "private" | map: "name" %}
+
+{% comment %}--- Full trending (all posts) ---{% endcomment %}
+{% assign size_list = '' | split: '' %}
+{% assign tag_list  = '' | split: '' %}
+{% for tag in site.tags %}
+  {% assign size    = tag | last | size %}
+  {% assign tag_str = tag | first | append: '::' | append: size %}
+  {% assign size_list = size_list | push: size %}
+  {% assign tag_list  = tag_list  | push: tag_str %}
+{% endfor %}
+{% assign size_list = size_list | sort | reverse %}
+{% assign tag_list  = tag_list  | sort_natural %}
+{% assign trending_tags = '' | split: '' %}
+{% for size in size_list limit: MAX %}
+  {% for tag_str in tag_list %}
+    {% assign tag      = tag_str | split: '::' %}
+    {% assign tag_name = tag | first %}
+    {% assign tag_size = tag | last | plus: 0 %}
+    {% if tag_size == size %}
+      {% unless trending_tags contains tag_name %}
+        {% assign trending_tags = trending_tags | push: tag_name %}
+        {% break %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% comment %}--- Public-only trending (public posts only) ---{% endcomment %}
+{% assign pub_size_list = '' | split: '' %}
+{% assign pub_tag_list  = '' | split: '' %}
+{% for tag_pair in site.tags %}
+  {% assign pub_count = 0 %}
+  {% for post in tag_pair[1] %}
+    {% assign post_is_private = false %}
+    {% for cat in post.categories %}
+      {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
+    {% endfor %}
+    {% unless post_is_private %}{% assign pub_count = pub_count | plus: 1 %}{% endunless %}
+  {% endfor %}
+  {% if pub_count > 0 %}
+    {% assign tag_str = tag_pair[0] | append: '::' | append: pub_count %}
+    {% assign pub_size_list = pub_size_list | push: pub_count %}
+    {% assign pub_tag_list  = pub_tag_list  | push: tag_str %}
+  {% endif %}
+{% endfor %}
+{% assign pub_size_list = pub_size_list | sort | reverse %}
+{% assign pub_tag_list  = pub_tag_list  | sort_natural %}
+{% assign public_trending_tags = '' | split: '' %}
+{% for size in pub_size_list limit: MAX %}
+  {% for tag_str in pub_tag_list %}
+    {% assign tag      = tag_str | split: '::' %}
+    {% assign tag_name = tag | first %}
+    {% assign tag_size = tag | last | plus: 0 %}
+    {% if tag_size == size %}
+      {% unless public_trending_tags contains tag_name %}
+        {% assign public_trending_tags = public_trending_tags | push: tag_name %}
+        {% break %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% comment %}--- Render both versions; JS picks one based on auth ---{% endcomment %}
+{% if trending_tags.size > 0 or public_trending_tags.size > 0 %}
+<section>
+  <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.trending_tags -}}</h2>
+
+  {% comment %}Shown to authenticated users{% endcomment %}
+  <div id="trending-all" class="d-flex flex-wrap mt-3 mb-1 me-3" style="display:none!important">
+    {% for tag_name in trending_tags %}
+      {% assign url = tag_name | slugify | url_encode | prepend: '/tags/' | append: '/' %}
+      <a class="post-tag btn btn-outline-primary" data-tag="{{ tag_name }}" href="{{ url | relative_url }}">{{ tag_name }}</a>
+    {% endfor %}
+  </div>
+
+  {% comment %}Shown to unauthenticated users{% endcomment %}
+  <div id="trending-public" class="d-flex flex-wrap mt-3 mb-1 me-3">
+    {% for tag_name in public_trending_tags %}
+      {% assign url = tag_name | slugify | url_encode | prepend: '/tags/' | append: '/' %}
+      <a class="post-tag btn btn-outline-primary" href="{{ url | relative_url }}">{{ tag_name }}</a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

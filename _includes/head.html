@@ -12,7 +12,7 @@
   <!-- Anti-flicker: apply theme before CSS renders -->
   <script>
     (function() {
-      var mode = localStorage.getItem('mode');
+      var mode = sessionStorage.getItem('mode');
       if (mode) {
         document.documentElement.setAttribute('data-mode', mode);
       } else {

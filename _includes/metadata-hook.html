@@ -88,3 +88,198 @@
     padding: 0 6px;
   }
 </style>
+
+{% comment %}--- Private access control ---{% endcomment %}
+{% assign private_cats = site.data.categories | where: "type", "private" %}
+{% assign private_cat_names = private_cats | map: "name" %}
+
+{% comment %}Compute tags that appear exclusively in private posts{% endcomment %}
+{% assign _public_tags = "" | split: "" %}
+{% for post in site.posts %}
+  {% assign _post_is_private = false %}
+  {% for cat in post.categories %}
+    {% if private_cat_names contains cat %}{% assign _post_is_private = true %}{% endif %}
+  {% endfor %}
+  {% unless _post_is_private %}
+    {% for tag in post.tags %}
+      {% unless _public_tags contains tag %}{% assign _public_tags = _public_tags | push: tag %}{% endunless %}
+    {% endfor %}
+  {% endunless %}
+{% endfor %}
+{% assign private_only_tags = "" | split: "" %}
+{% for tag_pair in site.tags %}
+  {% unless _public_tags contains tag_pair[0] %}
+    {% assign private_only_tags = private_only_tags | push: tag_pair[0] %}
+  {% endunless %}
+{% endfor %}
+
+<script>window.__PRIVATE_TAGS__ = {{ private_only_tags | jsonify }};</script>
+
+{% comment %}Determine if current page requires auth{% endcomment %}
+{% assign is_private_page = false %}
+{% for cat in private_cats %}
+  {% if page.categories contains cat.name or (page.type == 'category' and page.title == cat.name) %}
+    {% assign is_private_page = true %}
+  {% endif %}
+{% endfor %}
+{% if page.type == 'tag' and private_only_tags contains page.title %}
+  {% assign is_private_page = true %}
+{% endif %}
+
+{% if is_private_page %}
+<style>
+  #diary-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--main-bg, #1b1b1e);
+  }
+  body.diary-locked { overflow: hidden; }
+  .diary-gate-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2.5rem 3rem;
+    border: 1px solid var(--card-border-color, #3a3a3a);
+    border-radius: 12px;
+    background: var(--card-bg, #2a2a2e);
+    min-width: 280px;
+  }
+  .diary-gate-box h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--heading-color, #ccc);
+    letter-spacing: 0.05em;
+  }
+  .diary-gate-box input[type=password] {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--card-border-color, #555);
+    border-radius: 6px;
+    background: var(--main-bg, #1b1b1e);
+    color: var(--text-color, #ccc);
+    font-size: 1rem;
+    outline: none;
+    text-align: center;
+  }
+  .diary-gate-box input[type=password]:focus {
+    border-color: rgb(114, 224, 211);
+  }
+  .diary-gate-box button {
+    width: 100%;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    background: rgb(114, 224, 211);
+    color: #1b1b1e;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .diary-gate-box button:hover { opacity: 0.85; }
+  .diary-gate-error {
+    font-size: 0.85rem;
+    color: #e06c75;
+    display: none;
+  }
+</style>
+
+<script>
+(function () {
+  var HASH = '64027afcd0ea1d32adfaa4539a8c05c2a535da30753a4d1903d087c27536b23b';
+  var AUTH_KEY = 'diary_auth';
+  var AUTH_TIME_KEY = 'diary_auth_time';
+  var EXPIRES_MS = 24 * 60 * 60 * 1000; // 24시간
+
+  var stored = localStorage.getItem(AUTH_KEY);
+  var storedTime = localStorage.getItem(AUTH_TIME_KEY);
+  if (stored === HASH && storedTime && Date.now() - Number(storedTime) < EXPIRES_MS) return;
+
+  // 만료됐으면 초기화
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem(AUTH_TIME_KEY);
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.classList.add('diary-locked');
+
+    var gate = document.createElement('div');
+    gate.id = 'diary-gate';
+    gate.innerHTML =
+      '<div class="diary-gate-box">' +
+        '<h2>Private</h2>' +
+        '<input type="password" id="diary-pw" placeholder="Password" autocomplete="current-password" autofocus>' +
+        '<button id="diary-submit">Enter</button>' +
+        '<span class="diary-gate-error" id="diary-error">Wrong password</span>' +
+      '</div>';
+    document.body.appendChild(gate);
+
+    document.getElementById('diary-submit').addEventListener('click', verify);
+    document.getElementById('diary-pw').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') verify();
+    });
+
+    function verify() {
+      var input = document.getElementById('diary-pw').value;
+      var encoder = new TextEncoder();
+      crypto.subtle.digest('SHA-256', encoder.encode(input)).then(function (buf) {
+        var hex = Array.from(new Uint8Array(buf))
+          .map(function (b) { return b.toString(16).padStart(2, '0'); })
+          .join('');
+        if (hex === HASH) {
+          localStorage.setItem(AUTH_KEY, HASH);
+          localStorage.setItem(AUTH_TIME_KEY, String(Date.now()));
+          document.body.classList.remove('diary-locked');
+          document.getElementById('diary-gate').remove();
+        } else {
+          document.getElementById('diary-error').style.display = 'block';
+          document.getElementById('diary-pw').value = '';
+          document.getElementById('diary-pw').focus();
+        }
+      });
+    }
+  });
+})();
+</script>
+{% endif %}
+
+{% comment %}Filter private tags based on auth state (Tags page + Trending Tags panel){% endcomment %}
+<script>
+(function () {
+  var HASH = '64027afcd0ea1d32adfaa4539a8c05c2a535da30753a4d1903d087c27536b23b';
+  var AUTH_KEY = 'diary_auth';
+  var AUTH_TIME_KEY = 'diary_auth_time';
+  var EXPIRES_MS = 24 * 60 * 60 * 1000;
+
+  var stored = localStorage.getItem(AUTH_KEY);
+  var storedTime = localStorage.getItem(AUTH_TIME_KEY);
+  var isAuthed = stored === HASH && storedTime && Date.now() - Number(storedTime) < EXPIRES_MS;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Trending Tags: toggle between full list and public-only list
+    var all    = document.getElementById('trending-all');
+    var pub    = document.getElementById('trending-public');
+    if (all && pub) {
+      if (isAuthed) {
+        all.style.removeProperty('display');
+        pub.style.display = 'none';
+      }
+      // unauthenticated: trending-public already visible by default
+    }
+
+    // Tags page: hide private-only tags
+    if (!isAuthed) {
+      var privateTags = window.__PRIVATE_TAGS__ || [];
+      document.querySelectorAll('#tags a.tag[data-tag]').forEach(function (a) {
+        if (privateTags.indexOf(a.dataset.tag) !== -1) {
+          a.parentElement.style.display = 'none';
+        }
+      });
+    }
+  });
+})();
+</script>

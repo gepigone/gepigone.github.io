@@ -1,0 +1,9 @@
+# Category type definitions
+# type: private  -> requires password (lock icon in sidebar)
+# type: public   -> open access
+
+- name: Diary
+  type: private
+
+- name: Travel
+  type: public
