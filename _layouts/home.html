@@ -1,0 +1,180 @@
+---
+layout: default
+refactor: true
+---
+
+{% include lang.html %}
+
+{% assign private_cat_names = site.data.categories | where: "type", "private" | map: "name" %}
+
+<style>
+  .home-profile {
+    padding: 2rem 0 1.5rem;
+  }
+  .home-profile .name {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--heading-color);
+    margin-bottom: 0.4rem;
+  }
+  .home-profile .tagline {
+    font-size: 0.95rem;
+    color: var(--text-muted-color);
+    margin-bottom: 1rem;
+  }
+  .home-profile .social-icons a {
+    font-size: 1.1rem;
+    color: var(--text-muted-color);
+    margin-right: 0.75rem;
+    transition: color 0.2s;
+    text-decoration: none;
+  }
+  .home-profile .social-icons a:hover {
+    color: var(--link-color);
+  }
+  .home-divider {
+    border: none;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    margin: 1.25rem 0;
+  }
+  .home-posts-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted-color);
+    border-bottom: 2px solid var(--link-color);
+    display: inline-block;
+    padding-bottom: 2px;
+    margin-bottom: 1.25rem;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  @media (max-width: 768px) {
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .gallery-grid { grid-template-columns: 1fr; }
+  }
+  .gallery-card {
+    border: 2px solid rgb(114, 224, 211);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .gallery-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(114, 224, 211, 0.25);
+  }
+  .gallery-card a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .gallery-thumb {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+  .gallery-no-thumb {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--card-bg, #f5f5f5);
+  }
+  .gallery-title {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.88rem;
+    text-align: center;
+    color: var(--text-color, #333);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+{% comment %}Profile section{% endcomment %}
+<div class="home-profile">
+  <div class="name">{{ site.social.name }}</div>
+  {% if site.tagline %}
+    <div class="tagline">{{ site.tagline }}</div>
+  {% endif %}
+  <div class="social-icons">
+    {% for entry in site.data.contact %}
+      {% case entry.type %}
+        {% when 'github' %}
+          {% capture url %}https://github.com/young0tete{% endcapture %}
+        {% when 'email' %}
+          {% assign email = site.social.email | split: '@' %}
+          {% capture url %}javascript:location.href='mailto:'+['{{ email[0] }}','{{ email[1] }}'].join('@'){% endcapture %}
+        {% when 'rss' %}
+          {% assign url = nil %}
+        {% else %}
+          {% assign url = entry.url %}
+      {% endcase %}
+      {% if url %}
+        <a href="{{ url }}" aria-label="{{ entry.type }}"
+          {% unless entry.noblank %}target="_blank" rel="noopener noreferrer"{% endunless %}>
+          <i class="{{ entry.icon }}"></i>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<hr class="home-divider">
+<div class="home-posts-header">POSTS</div>
+
+{% comment %}Build public-only post list{% endcomment %}
+{% assign public_posts = "" | split: "" %}
+{% for post in site.posts %}
+  {% assign post_is_private = false %}
+  {% for cat in post.categories %}
+    {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
+  {% endfor %}
+  {% unless post_is_private %}
+    {% assign public_posts = public_posts | push: post %}
+  {% endunless %}
+{% endfor %}
+
+{% comment %}All posts gallery (authenticated){% endcomment %}
+<div id="gallery-all" class="gallery-grid" style="display:none">
+  {% for post in site.posts %}
+    {% assign thumb = post.thumbnail | default: "" %}
+    {% if thumb == "" and post.image %}
+      {% assign thumb = post.image.path | default: post.image %}
+    {% endif %}
+    <div class="gallery-card">
+      <a href="{{ post.url | relative_url }}">
+        {% if thumb != "" %}
+          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ post.title }}">
+        {% else %}
+          <div class="gallery-no-thumb"></div>
+        {% endif %}
+        <p class="gallery-title">{{ post.title }}</p>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+{% comment %}Public posts gallery (unauthenticated){% endcomment %}
+<div id="gallery-public" class="gallery-grid">
+  {% for post in public_posts %}
+    {% assign thumb = post.thumbnail | default: "" %}
+    {% if thumb == "" and post.image %}
+      {% assign thumb = post.image.path | default: post.image %}
+    {% endif %}
+    <div class="gallery-card">
+      <a href="{{ post.url | relative_url }}">
+        {% if thumb != "" %}
+          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ post.title }}">
+        {% else %}
+          <div class="gallery-no-thumb"></div>
+        {% endif %}
+        <p class="gallery-title">{{ post.title }}</p>
+      </a>
+    </div>
+  {% endfor %}
+</div>

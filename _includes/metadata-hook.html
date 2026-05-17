@@ -1,8 +1,5 @@
 <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
 
-{% if page.layout == 'home' %}
-<style>#post-list, .pagination { display: none !important; }</style>
-{% endif %}
 
 <style>
   html[data-mode=dark],
@@ -55,7 +52,7 @@
   }
 
   .sidebar-bottom {
-    justify-content: flex-start !important;
+    justify-content: center !important;
     gap: 0.25rem;
   }
 
@@ -278,6 +275,15 @@
       if (isAuthed) {
         lmAll.style.removeProperty('display');
         lmPub.style.display = 'none';
+      }
+    }
+
+    var gAll = document.getElementById('gallery-all');
+    var gPub = document.getElementById('gallery-public');
+    if (gAll && gPub) {
+      if (isAuthed) {
+        gAll.style.removeProperty('display');
+        gPub.style.display = 'none';
       }
     }
 

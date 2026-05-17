@@ -10,9 +10,9 @@
   icon: "fas fa-envelope"
   noblank: true # open link in current tab
   
-- type: linkedin
-  icon: 'fab fa-linkedin'   # icons powered by <https://fontawesome.com/>
-  url:  'https://www.linkedin.com/in/youngtae-han-2a8355270/'                  # Fill with your Linkedin homepage
+- type: instagram
+  icon: 'fab fa-instagram'
+  url: 'https://www.instagram.com/young0tete'
 
 # - type: rss
 #   icon: "fas fa-rss"
