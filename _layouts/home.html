@@ -125,55 +125,66 @@ refactor: true
 </div>
 
 <hr class="home-divider">
-<div class="home-posts-header">POSTS</div>
+<div class="home-posts-header">POSTS &amp; SNAPS</div>
 
-{% comment %}Build public-only post list{% endcomment %}
-{% assign public_posts = "" | split: "" %}
-{% for post in site.posts %}
-  {% assign post_is_private = false %}
-  {% for cat in post.categories %}
-    {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
-  {% endfor %}
-  {% unless post_is_private %}
-    {% assign public_posts = public_posts | push: post %}
+{% comment %}Merge posts + snaps, sort by date desc{% endcomment %}
+{% assign all_items = site.posts | concat: site.snaps | sort: 'date' | reverse %}
+
+{% comment %}Build public-only list{% endcomment %}
+{% assign public_items = "" | split: "" %}
+{% for item in all_items %}
+  {% assign item_is_private = false %}
+  {% if item.collection == 'posts' %}
+    {% for cat in item.categories %}
+      {% if private_cat_names contains cat %}{% assign item_is_private = true %}{% endif %}
+    {% endfor %}
+  {% endif %}
+  {% unless item_is_private %}
+    {% assign public_items = public_items | push: item %}
   {% endunless %}
 {% endfor %}
 
-{% comment %}All posts gallery (authenticated){% endcomment %}
+{% comment %}All items gallery (authenticated){% endcomment %}
 <div id="gallery-all" class="gallery-grid" style="display:none">
-  {% for post in site.posts %}
-    {% assign thumb = post.thumbnail | default: "" %}
-    {% if thumb == "" and post.image %}
-      {% assign thumb = post.image.path | default: post.image %}
+  {% for item in all_items %}
+    {% assign thumb = item.thumbnail | default: "" %}
+    {% if thumb == "" and item.image %}
+      {% assign thumb = item.image.path | default: item.image %}
+    {% endif %}
+    {% if thumb == "" and item.images and item.images.size > 0 %}
+      {% assign thumb = item.images[0] %}
     {% endif %}
     <div class="gallery-card">
-      <a href="{{ post.url | relative_url }}">
+      <a href="{{ item.url | relative_url }}">
         {% if thumb != "" %}
-          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ post.title }}">
+          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ item.title }}">
         {% else %}
           <div class="gallery-no-thumb"></div>
         {% endif %}
-        <p class="gallery-title">{{ post.title }}</p>
+        <p class="gallery-title">{{ item.title }}</p>
       </a>
     </div>
   {% endfor %}
 </div>
 
-{% comment %}Public posts gallery (unauthenticated){% endcomment %}
+{% comment %}Public items gallery (unauthenticated){% endcomment %}
 <div id="gallery-public" class="gallery-grid">
-  {% for post in public_posts %}
-    {% assign thumb = post.thumbnail | default: "" %}
-    {% if thumb == "" and post.image %}
-      {% assign thumb = post.image.path | default: post.image %}
+  {% for item in public_items %}
+    {% assign thumb = item.thumbnail | default: "" %}
+    {% if thumb == "" and item.image %}
+      {% assign thumb = item.image.path | default: item.image %}
+    {% endif %}
+    {% if thumb == "" and item.images and item.images.size > 0 %}
+      {% assign thumb = item.images[0] %}
     {% endif %}
     <div class="gallery-card">
-      <a href="{{ post.url | relative_url }}">
+      <a href="{{ item.url | relative_url }}">
         {% if thumb != "" %}
-          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ post.title }}">
+          <img class="gallery-thumb" src="{{ thumb }}" alt="{{ item.title }}">
         {% else %}
           <div class="gallery-no-thumb"></div>
         {% endif %}
-        <p class="gallery-title">{{ post.title }}</p>
+        <p class="gallery-title">{{ item.title }}</p>
       </a>
     </div>
   {% endfor %}
