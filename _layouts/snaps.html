@@ -56,9 +56,11 @@ layout: page
 {% if sorted_snaps.size == 0 %}
   <p class="text-muted text-center mt-5">No snaps yet.</p>
 {% else %}
-  <div class="snap-grid">
+  <div class="snap-grid" id="snap-grid">
     {% for snap in sorted_snaps %}
-      <a href="{{ snap.url | relative_url }}" class="snap-cell">
+      {% assign cats_slug = snap.categories | map: 'slugify' | join: ' ' %}
+      <a href="{{ snap.url | relative_url }}" class="snap-cell"
+         data-categories="{{ snap.categories | join: ',' | slugify }}">
         {% if snap.thumbnail %}
           <img src="{{ snap.thumbnail }}" alt="{{ snap.title }}">
         {% elsif snap.images and snap.images.size > 0 %}
@@ -72,4 +74,29 @@ layout: page
       </a>
     {% endfor %}
   </div>
+  <p id="snap-no-result" class="text-muted text-center mt-5" style="display:none">No snaps in this category.</p>
 {% endif %}
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var cat = params.get('cat');
+  if (!cat) return;
+  document.addEventListener('DOMContentLoaded', function() {
+    var cells = document.querySelectorAll('#snap-grid .snap-cell');
+    var visible = 0;
+    cells.forEach(function(el) {
+      var cats = (el.dataset.categories || '').split(',');
+      if (cats.indexOf(cat) === -1) {
+        el.style.display = 'none';
+      } else {
+        visible++;
+      }
+    });
+    if (visible === 0) {
+      var noResult = document.getElementById('snap-no-result');
+      if (noResult) noResult.style.display = 'block';
+    }
+  });
+})();
+</script>

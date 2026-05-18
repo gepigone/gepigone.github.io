@@ -36,6 +36,41 @@
           </a>
         </li>
 
+        {% if tab_url_check contains 'snaps' %}
+          <li class="nav-item sidebar-subnav">
+            <ul class="nav flex-column">
+              {% assign snap_cats = "" | split: "" %}
+              {% for snap in site.snaps %}
+                {% for cat in snap.categories %}
+                  {% unless snap_cats contains cat %}
+                    {% assign snap_cats = snap_cats | push: cat %}
+                  {% endunless %}
+                {% endfor %}
+              {% endfor %}
+              {% assign sorted_snap_cats = snap_cats | sort %}
+              {% for cat in sorted_snap_cats %}
+                {% assign cat_slug = cat | slugify %}
+                <li class="nav-item">
+                  <a href="{{ '/snaps/?cat=' | append: cat_slug | relative_url }}"
+                     class="nav-link sidebar-sub-link">
+                    <i class="fa-fw fas fa-folder"></i>
+                    <span>{{ cat }}</span>
+                    <span class="sidebar-sub-count">
+                      {% assign cat_count = 0 %}
+                      {% for snap in site.snaps %}
+                        {% if snap.categories contains cat %}
+                          {% assign cat_count = cat_count | plus: 1 %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ cat_count }}
+                    </span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endif %}
+
         {% if tab_url_check contains 'categories' %}
           <li class="nav-item sidebar-subnav">
             <ul class="nav flex-column">
