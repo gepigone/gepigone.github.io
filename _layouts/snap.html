@@ -1,0 +1,90 @@
+---
+layout: default
+---
+
+{% include lang.html %}
+
+<style>
+  .snap-article {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1rem 0;
+  }
+  .snap-images {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .snap-images img {
+    width: 100%;
+    display: block;
+    border-radius: 4px;
+  }
+  .snap-no-image {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--card-bg, #e8e8e8);
+    border-radius: 4px;
+  }
+  .snap-caption {
+    padding: 0.75rem 0.25rem;
+  }
+  .snap-caption .snap-title {
+    font-size: 1rem;
+    color: var(--text-color);
+    margin-bottom: 0.4rem;
+  }
+  .snap-caption .snap-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted-color);
+  }
+  .snap-caption .snap-tags {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .snap-caption .snap-tags a {
+    font-size: 0.8rem;
+    color: var(--link-color);
+    text-decoration: none;
+  }
+  .snap-content {
+    font-size: 0.95rem;
+    color: var(--text-color);
+    margin-top: 0.5rem;
+  }
+</style>
+
+<article class="snap-article">
+
+  <div class="snap-images">
+    {% if page.images and page.images.size > 0 %}
+      {% for img in page.images %}
+        <img src="{{ img }}" alt="{{ page.title }}">
+      {% endfor %}
+    {% elsif page.thumbnail %}
+      <img src="{{ page.thumbnail }}" alt="{{ page.title }}">
+    {% else %}
+      <div class="snap-no-image"></div>
+    {% endif %}
+  </div>
+
+  <div class="snap-caption">
+    <p class="snap-title">{{ page.title }}</p>
+    <div class="snap-meta">
+      {% include datetime.html date=page.date lang=lang %}
+    </div>
+    {% if page.tags and page.tags.size > 0 %}
+      <div class="snap-tags">
+        {% for tag in page.tags %}
+          <a href="{{ '/tags/' | append: tag | slugify | relative_url }}">#{{ tag }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if content != '' %}
+      <div class="snap-content">{{ content }}</div>
+    {% endif %}
+  </div>
+
+</article>
