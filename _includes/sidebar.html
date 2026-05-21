@@ -89,7 +89,8 @@
                   {% assign cat_slug = category | slugify %}
                   {% assign cat_data = site.data.categories | where: "name", category | first %}
                   <a href="{{ '/categories/' | append: cat_slug | relative_url }}"
-                     class="nav-link sidebar-sub-link{% if page.categories contains category %} active{% endif %}">
+                     class="nav-link sidebar-sub-link{% if page.categories contains category %} active{% endif %}"
+                     {% if cat_data.type == 'private' %}data-private="true"{% endif %}>
                     {% if cat_data.type == 'private' %}
                       <i class="fa-fw fas fa-lock"></i>
                     {% else %}

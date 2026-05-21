@@ -134,11 +134,10 @@ refactor: true
 {% assign public_items = "" | split: "" %}
 {% for item in all_items %}
   {% assign item_is_private = false %}
-  {% if item.collection == 'posts' %}
-    {% for cat in item.categories %}
-      {% if private_cat_names contains cat %}{% assign item_is_private = true %}{% endif %}
-    {% endfor %}
-  {% endif %}
+  {% if item.private %}{% assign item_is_private = true %}{% endif %}
+  {% for cat in item.categories %}
+    {% if private_cat_names contains cat %}{% assign item_is_private = true %}{% endif %}
+  {% endfor %}
   {% unless item_is_private %}
     {% assign public_items = public_items | push: item %}
   {% endunless %}

@@ -98,6 +98,7 @@
 {% assign _public_tags = "" | split: "" %}
 {% for post in site.posts %}
   {% assign _post_is_private = false %}
+  {% if post.private %}{% assign _post_is_private = true %}{% endif %}
   {% for cat in post.categories %}
     {% if private_cat_names contains cat %}{% assign _post_is_private = true %}{% endif %}
   {% endfor %}
@@ -118,6 +119,7 @@
 
 {% comment %}Determine if current page requires auth{% endcomment %}
 {% assign is_private_page = false %}
+{% if page.private %}{% assign is_private_page = true %}{% endif %}
 {% for cat in private_cats %}
   {% if page.categories contains cat.name or (page.type == 'category' and page.title == cat.name) %}
     {% assign is_private_page = true %}
@@ -276,6 +278,13 @@
         lmAll.style.removeProperty('display');
         lmPub.style.display = 'none';
       }
+    }
+
+    if (!isAuthed) {
+      document.querySelectorAll('.sidebar-sub-link[data-private="true"]').forEach(function(el) {
+        var li = el.closest('li.nav-item');
+        if (li) li.style.display = 'none';
+      });
     }
 
     var gAll = document.getElementById('gallery-all');

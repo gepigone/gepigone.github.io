@@ -36,6 +36,7 @@
   {% assign pub_count = 0 %}
   {% for post in tag_pair[1] %}
     {% assign post_is_private = false %}
+    {% if post.private %}{% assign post_is_private = true %}{% endif %}
     {% for cat in post.categories %}
       {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
     {% endfor %}

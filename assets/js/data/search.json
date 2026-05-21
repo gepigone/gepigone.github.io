@@ -8,6 +8,7 @@ swcache: true
 [
   {% for post in site.posts %}
     {% assign post_is_private = false %}
+    {% if post.private %}{% assign post_is_private = true %}{% endif %}
     {% for cat in post.categories %}
       {% if private_cat_names contains cat %}{% assign post_is_private = true %}{% endif %}
     {% endfor %}
