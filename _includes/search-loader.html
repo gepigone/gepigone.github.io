@@ -23,12 +23,36 @@
     var storedTime = localStorage.getItem(AUTH_TIME_KEY);
     var isAuthed = stored === HASH && storedTime && Date.now() - Number(storedTime) < EXPIRES_MS;
 
+    var searchInput = document.getElementById('search-input');
+
+    if (searchInput) {
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        var val = searchInput.value;
+        var encoder = new TextEncoder();
+        crypto.subtle.digest('SHA-256', encoder.encode(val)).then(function(buf) {
+          var hex = Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+          if (hex === HASH) {
+            if (isAuthed) {
+              localStorage.removeItem(AUTH_KEY);
+              localStorage.removeItem(AUTH_TIME_KEY);
+            } else {
+              localStorage.setItem(AUTH_KEY, HASH);
+              localStorage.setItem(AUTH_TIME_KEY, String(Date.now()));
+            }
+            searchInput.value = '';
+            window.location.reload();
+          }
+        });
+      });
+    }
+
     fetch('{{ '/assets/js/data/search.json' | relative_url }}')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var filtered = isAuthed ? data : data.filter(function(item) { return !item.private; });
         SimpleJekyllSearch({
-          searchInput: document.getElementById('search-input'),
+          searchInput: searchInput,
           resultsContainer: document.getElementById('search-results'),
           json: filtered,
           searchResultTemplate: '{{ result_elem | strip_newlines }}',
